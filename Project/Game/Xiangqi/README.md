@@ -2,7 +2,7 @@
 
 一个开箱即用的中国象棋双人/人机对战网页，采用纯前端技术（HTML + CSS + JavaScript）实现。你可以直接在浏览器中运行，无需任何后端依赖。
 
-🔗 **在线试玩**：https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/ （若已开启 Pages）
+🔗 **在线试玩**：<https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/> （若已开启 Pages）
 
 📦 **仓库地址**：https://github.com/Yang-2026-user/My-Repository
 
@@ -39,9 +39,11 @@
 
 ## 🗂️ 文件结构
 
+```
 /
 ├── index.html          # 单页面应用（含所有 CSS / JavaScript）
 └── README.md           # 本文件
+```
 
 > 整个项目仅一个 HTML 文件，无外部依赖，便于分发和部署。
 
