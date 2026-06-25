@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#c89968" />
+    <title>五子棋 Gomoku</title>
+    <style>
+        :root {
+            --board-bg: #e8b974;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --text-main: #2a1b0a;
+            --accent: #b22222;
+            --accent-2: #2b5797;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+
+            /* 棋盘主题（默认：榧木） */
+            --board-a: #efc28a;
+            --board-b: #cf9960;
+            --board-line: rgba(70, 40, 10, 0.85);
+            --board-star: rgba(40, 20, 5, 0.9);
+            --board-border: rgba(50, 25, 5, 0.95);
+            --page-bg-a: #f5e6c8;
+            --page-bg-b: #d9b076;
+            --page-bg-c: #b8864b;
+        }
+
+        /* 主题：深蓝棋盘 */
+        body.theme-blue {
+            --board-a: #2a4d6d;
+            --board-b: #1a2f44;
+            --board-line: rgba(220, 230, 245, 0.82);
+            --board-star: rgba(220, 230, 245, 0.9);
+            --board-border: rgba(255, 255, 255, 0.85);
+            --page-bg-a: #0f1a28;
+            --page-bg-b: #16263a;
+            --page-bg-c: #0a1220;
+        }
+
+        /* 主题：翠绿玉子 */
+        body.theme-green {
+            --board-a: #b7d9a7;
+            --board-b: #7fb583;
+            --board-line: rgba(30, 60, 35, 0.85);
+            --board-star: rgba(20, 40, 25, 0.9);
+            --board-border: rgba(15, 35, 20, 0.95);
+            --page-bg-a: #e6f1d8;
+            --page-bg-b: #a9c98f;
+            --page-bg-c: #6a9a66;
+        }
+
+        /* 主题：石墨 */
+        body.theme-gray {
+            --board-a: #d7d7d7;
+            --board-b: #9a9a9a;
+            --board-line: rgba(40, 40, 40, 0.9);
+            --board-star: rgba(20, 20, 20, 0.95);
+            --board-border: rgba(20, 20, 20, 0.95);
+            --page-bg-a: #eaeaee;
+            --page-bg-b: #bdbdbd;
+            --page-bg-c: #7e7e7e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            color: var(--text-main);
+            background: linear-gradient(135deg, var(--page-bg-a) 0%, var(--page-bg-b) 50%, var(--page-bg-c) 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.4s ease;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 12px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            gap: 14px;
+        }
+
+        header.title {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--panel-bg);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        header.title h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+
+        header.title .sub {
+            font-size: 0.78rem;
+            color: #6b4a22;
+        }
+
+        .group-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0.75;
+            margin-right: 6px;
+            white-space: nowrap;
+        }
+
+        .option-row {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--panel-bg);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            align-items: center;
+        }
+
+        .option-row.row-2 {
+            margin-top: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 0 0 14px 14px;
+        }
+        .options-main {
+            border-radius: 14px 14px 0 0;
+            box-shadow: none;
+            position: relative;
+        }
+
+        .icon-btn {
+            appearance: none;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.6);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .icon-btn.active {
+            background: var(--accent-2);
+            color: #fff;
+            border-color: transparent;
+        }
+        .icon-btn:active {
+            transform: translateY(1px);
+        }
+
+        .status-bar {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--panel-bg);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            font-size: 0.95rem;
+        }
+
+        .turn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .stone-chip {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.35),
+                inset 2px 2px 4px rgba(255, 255, 255, 0.35), 0 2px 3px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .stone-black {
+            background: radial-gradient(circle at 35% 30%, #5a5a5a, #000 70%);
+        }
+        .stone-white {
+            background: radial-gradient(circle at 35% 30%, #ffffff, #c8c8c8 75%);
+        }
+
+        .info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            font-size: 0.85rem;
+            color: #5a3a1b;
+            align-items: center;
+        }
+
+        .seg {
+            display: inline-flex;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(43, 87, 151, 0.35);
+            background: #fff;
+        }
+
+        .seg button {
+            appearance: none;
+            border: none;
+            padding: 8px 14px;
+            background: transparent;
+            font-size: 0.88rem;
+            color: #2b5797;
+            cursor: pointer;
+            border-right: 1px solid rgba(43, 87, 151, 0.2);
+            white-space: nowrap;
+        }
+        .seg button:last-child {
+            border-right: none;
+        }
+        .seg button.active {
+            background: linear-gradient(180deg, #2b5797, #1e3f70);
+            color: #fff;
+        }
+
+        .seg.warn {
+            border-color: rgba(178, 34, 34, 0.4);
+        }
+        .seg.warn button {
+            color: #b22222;
+        }
+        .seg.warn button.active {
+            background: linear-gradient(180deg, #b22222, #8b1a1a);
+            color: #fff;
+        }
+
+        .board-wrap {
+            width: 100%;
+            max-width: 760px;
+            aspect-ratio: 1 / 1;
+            background: var(--board-bg);
+            border-radius: 14px;
+            box-shadow: var(--shadow), inset 0 0 0 6px #b48150;
+            position: relative;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        #board {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button.btn {
+            appearance: none;
+            border: none;
+            padding: 12px 18px;
+            min-width: 110px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(180deg, #2b5797, #1e3f70);
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(43, 87, 151, 0.35);
+            transition: transform 0.08s ease, box-shadow 0.15s ease, opacity 0.15s;
+        }
+        button.btn.danger {
+            background: linear-gradient(180deg, #b22222, #8b1a1a);
+            box-shadow: 0 4px 10px rgba(178, 34, 34, 0.35);
+        }
+        button.btn.ghost {
+            background: linear-gradient(180deg, #6b4a22, #4a3214);
+            box-shadow: 0 4px 10px rgba(107, 74, 34, 0.35);
+        }
+
+        button.btn:active {
+            transform: translateY(1px);
+        }
+        button.btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 20px;
+        }
+        .overlay.show {
+            display: flex;
+        }
+
+        .dialog {
+            background: #fffaf0;
+            border-radius: 16px;
+            padding: 22px 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .dialog h2 {
+            margin: 0 0 8px;
+            color: var(--accent);
+        }
+        .dialog p {
+            margin: 6px 0 18px;
+            color: #5a3a1b;
+            white-space: pre-line;
+        }
+
+        .dialog .dialog-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        footer {
+            font-size: 0.78rem;
+            color: #3a2810;
+            opacity: 0.8;
+            text-align: center;
+            padding: 4px 0 14px;
+        }
+
+        @media (min-width: 720px) {
+            header.title h1 {
+                font-size: 1.6rem;
+            }
+            .status-bar,
+            .options {
+                font-size: 1rem;
+            }
+            button.btn {
+                min-width: 140px;
+                padding: 14px 22px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header.title h1 {
+                font-size: 1.05rem;
+                letter-spacing: 1px;
+            }
+            header.title .sub {
+                display: none;
+            }
+            .info {
+                font-size: 0.78rem;
+                gap: 10px;
+            }
+            .options {
+                padding: 10px;
+            }
+            .options label {
+                font-size: 0.82rem;
+            }
+            .seg button {
+                padding: 7px 10px;
+                font-size: 0.82rem;
+            }
+            button.btn {
+                min-width: 0;
+                flex: 1 1 30%;
+                padding: 12px 10px;
+                font-size: 0.9rem;
+            }
+            .icon-btn {
+                font-size: 0.78rem;
+                padding: 5px 8px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --panel-bg: rgba(30, 22, 14, 0.92);
+                --text-main: #f5e6c8;
+            }
+            html,
+            body {
+                color: var(--text-main);
+            }
+            body:not(.theme-blue):not(.theme-green):not(.theme-gray) {
+                background: linear-gradient(135deg, #2a1b0a, #4a3214, #2a1b0a);
+            }
+            header.title,
+            .status-bar,
+            .option-row {
+                background: var(--panel-bg);
+                color: var(--text-main);
+            }
+            header.title .sub,
+            .info,
+            footer {
+                color: #d9b076;
+            }
+            .dialog {
+                background: #2a1b0a;
+                color: var(--text-main);
+            }
+            .dialog p {
+                color: #d9b076;
+            }
+            .seg {
+                background: #1a1108;
+            }
+            .seg button {
+                color: #8bb3ff;
+            }
+            .seg.warn button {
+                color: #ff9a9a;
+            }
+            .icon-btn {
+                background: rgba(255, 255, 255, 0.08);
+                border-color: rgba(255, 255, 255, 0.15);
+                color: var(--text-main);
+            }
+        }
+
+        /* 语言切换按钮特殊样式 */
+        #btnLang {
+            font-weight: 600;
+            min-width: 52px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="title">
+            <h1 data-i18n="title">五 子 棋</h1>
+            <span class="sub" data-i18n="subtitle">Gomoku · 15×15</span>
+        </header>
+
+        <!-- 第一行：模式 / 执子 / 难度 -->
+        <div class="option-row options-main" style="box-shadow: var(--shadow); border-radius: 14px 14px 0 0;">
+            <span class="group-label" data-i18n="modeLabel">模式</span>
+            <div class="seg" id="modeSeg">
+                <button data-val="pvp" class="active" data-i18n="modePvp">双人</button>
+                <button data-val="ai" data-i18n="modeAi">人机</button>
+            </div>
+
+            <span class="group-label" id="sideLabel" style="display:none;" data-i18n="sideLabel">执子</span>
+            <div class="seg" id="sideSeg" style="display:none;">
+                <button data-val="black" class="active" data-i18n="sideBlack">我执黑</button>
+                <button data-val="white" data-i18n="sideWhite">我执白</button>
+            </div>
+
+            <span class="group-label" id="diffLabel" style="display:none;" data-i18n="diffLabel">AI</span>
+            <div class="seg warn" id="diffSeg" style="display:none;">
+                <button data-val="easy" data-i18n="diffEasy">简单</button>
+                <button data-val="normal" class="active" data-i18n="diffNormal">普通</button>
+                <button data-val="hard" data-i18n="diffHard">困难</button>
+            </div>
+        </div>
+
+        <!-- 第二行：主题 / 音效 / 语言 -->
+        <div class="option-row row-2" style="box-shadow: var(--shadow); border-radius: 0 0 14px 14px; margin-top: -12px;">
+            <span class="group-label" data-i18n="themeLabel">主题</span>
+            <div class="seg" id="themeSeg">
+                <button data-val="wood" class="active" data-i18n="themeWood">榧木</button>
+                <button data-val="blue" data-i18n="themeBlue">深蓝</button>
+                <button data-val="green" data-i18n="themeGreen">翠绿</button>
+                <button data-val="gray" data-i18n="themeGray">石墨</button>
+            </div>
+
+            <button class="icon-btn" id="btnLang" title="切换语言 / Switch language">中文</button>
+            <button class="icon-btn" id="btnSound" title="音效开关">🔊 音效</button>
+        </div>
+
+        <div class="status-bar">
+            <div class="turn" id="turnBox">
+                <div class="stone-chip stone-black" id="turnChip"></div>
+                <span id="turnText" data-i18n="turnBlack">黑方落子</span>
+            </div>
+            <div class="info">
+                <span id="moveCount" data-i18n="moveCount">第 0 手</span>
+                <span>·</span>
+                <span id="modeText" data-i18n="modePvpLabel">模式：双人对战</span>
+            </div>
+        </div>
+
+        <div class="board-wrap" id="boardWrap">
+            <canvas id="board"></canvas>
+        </div>
+
+        <div class="controls">
+            <button class="btn ghost" id="btnUndo" data-i18n="btnUndo">悔棋</button>
+            <button class="btn" id="btnRestart" data-i18n="btnRestart">重新开始</button>
+        </div>
+
+        <footer data-i18n="footer">点击或触摸落子 · 先连成五子者获胜 · 人机对战支持多档AI</footer>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="dialog">
+            <h2 id="dlgTitle" data-i18n="dlgGameOver">游戏结束</h2>
+            <p id="dlgMsg"></p>
+            <div class="dialog-btns">
+                <button class="btn" id="dlgPrimary" data-i18n="dlgOk">确定</button>
+                <button class="btn ghost" id="dlgSecondary" style="display:none;" data-i18n="dlgCancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  1. 多语言字典
+            // ============================================================
+            const LANG = {
+                zh: {
+                    title: '五 子 棋',
+                    subtitle: 'Gomoku · 15×15',
+                    modeLabel: '模式',
+                    modePvp: '双人',
+                    modeAi: '人机',
+                    sideLabel: '执子',
+                    sideBlack: '我执黑',
+                    sideWhite: '我执白',
+                    diffLabel: 'AI',
+                    diffEasy: '简单',
+                    diffNormal: '普通',
+                    diffHard: '困难',
+                    themeLabel: '主题',
+                    themeWood: '榧木',
+                    themeBlue: '深蓝',
+                    themeGreen: '翠绿',
+                    themeGray: '石墨',
+                    btnUndo: '悔棋',
+                    btnRestart: '重新开始',
+                    footer: '点击或触摸落子 · 先连成五子者获胜 · 人机对战支持多档AI',
+                    turnBlack: '黑方落子',
+                    turnWhite: '白方落子',
+                    turnAiBlack: 'AI(黑)落子',
+                    turnAiWhite: 'AI(白)落子',
+                    turnHumanBlack: '你(黑)落子',
+                    turnHumanWhite: '你(白)落子',
+                    turnGameOver: '本局结束',
+                    turnAiThinking: 'AI思考中…',
+                    moveCount: '第 {n} 手',
+                    modePvpLabel: '模式：双人对战',
+                    modeAiLabel: '模式：人机 · {side} · {diff}',
+                    sideBlackLabel: '我执黑',
+                    sideWhiteLabel: '我执白',
+                    diffEasyLabel: '简单',
+                    diffNormalLabel: '普通',
+                    diffHardLabel: '困难',
+                    dlgGameOver: '游戏结束',
+                    dlgOk: '确定',
+                    dlgCancel: '取消',
+                    dlgDraw: '和棋',
+                    dlgDrawMsg: '棋盘已满，双方未分胜负。',
+                    dlgWinBlack: '黑方获胜',
+                    dlgWinWhite: '白方获胜',
+                    dlgWinMsg: '{who}率先连成五子，恭喜！',
+                    dlgRestartConfirm: '确定重新开始本局？',
+                    dlgRestartMsg: '当前所有落子将被清空。',
+                    dlgUndoConfirm: '确认悔棋',
+                    dlgUndoMsg: '将回退到上一手落子之前。',
+                    dlgSwitchConfirm: '切换选项将重新开始本局',
+                    dlgSwitchMsg: '当前所有落子将被清空。',
+                    dlgAiUndoAgree: 'AI 同意悔棋',
+                    dlgAiUndoReject: 'AI 拒绝悔棋',
+                    dlgAiUndoReasonGreat: 'AI 局势大好，拒绝悔棋。',
+                    dlgAiUndoReasonAdv: 'AI 局面占优，不愿悔棋。',
+                    dlgAiUndoReasonSlight: 'AI 稍占优势，不同意悔棋。',
+                    dlgAiUndoReasonTie: 'AI 认为局面胶着，同意悔棋。',
+                    dlgAiUndoReasonBad: 'AI 认为自身局面不利，同意悔棋。',
+                    dlgRestartAgain: '再来一局',
+                    dlgClose: '关闭',
+                },
+                en: {
+                    title: 'Gomoku',
+                    subtitle: 'Gomoku · 15×15',
+                    modeLabel: 'Mode',
+                    modePvp: '2 Players',
+                    modeAi: 'vs AI',
+                    sideLabel: 'Play as',
+                    sideBlack: 'Black',
+                    sideWhite: 'White',
+                    diffLabel: 'AI',
+                    diffEasy: 'Easy',
+                    diffNormal: 'Normal',
+                    diffHard: 'Hard',
+                    themeLabel: 'Theme',
+                    themeWood: 'Wood',
+                    themeBlue: 'Blue',
+                    themeGreen: 'Green',
+                    themeGray: 'Gray',
+                    btnUndo: 'Undo',
+                    btnRestart: 'Restart',
+                    footer: 'Tap to place · First to connect five wins · AI with multiple levels',
+                    turnBlack: "Black's turn",
+                    turnWhite: "White's turn",
+                    turnAiBlack: 'AI (Black) thinking',
+                    turnAiWhite: 'AI (White) thinking',
+                    turnHumanBlack: 'You (Black)',
+                    turnHumanWhite: 'You (White)',
+                    turnGameOver: 'Game Over',
+                    turnAiThinking: 'AI thinking…',
+                    moveCount: 'Move {n}',
+                    modePvpLabel: 'Mode: 2 Players',
+                    modeAiLabel: 'Mode: vs AI · {side} · {diff}',
+                    sideBlackLabel: 'Black',
+                    sideWhiteLabel: 'White',
+                    diffEasyLabel: 'Easy',
+                    diffNormalLabel: 'Normal',
+                    diffHardLabel: 'Hard',
+                    dlgGameOver: 'Game Over',
+                    dlgOk: 'OK',
+                    dlgCancel: 'Cancel',
+                    dlgDraw: 'Draw',
+                    dlgDrawMsg: 'Board is full, no winner.',
+                    dlgWinBlack: 'Black Wins',
+                    dlgWinWhite: 'White Wins',
+                    dlgWinMsg: '{who} connected five first, congratulations!',
+                    dlgRestartConfirm: 'Restart the game?',
+                    dlgRestartMsg: 'All moves will be cleared.',
+                    dlgUndoConfirm: 'Confirm undo',
+                    dlgUndoMsg: 'Revert to the previous move.',
+                    dlgSwitchConfirm: 'Switching will restart the game',
+                    dlgSwitchMsg: 'All moves will be cleared.',
+                    dlgAiUndoAgree: 'AI agrees to undo',
+                    dlgAiUndoReject: 'AI rejects undo',
+                    dlgAiUndoReasonGreat: 'AI is in a great position, refuses to undo.',
+                    dlgAiUndoReasonAdv: 'AI has an advantage, refuses to undo.',
+                    dlgAiUndoReasonSlight: 'AI is slightly ahead, refuses to undo.',
+                    dlgAiUndoReasonTie: 'AI thinks it\'s a tie, agrees to undo.',
+                    dlgAiUndoReasonBad: 'AI is in a bad position, agrees to undo.',
+                    dlgRestartAgain: 'Play Again',
+                    dlgClose: 'Close',
+                }
+            };
+
+            let currentLang = 'zh';
+
+            // ============================================================
+            //  2. 国际化工具
+            // ============================================================
+            function i18n(key, params) {
+                let text = LANG[currentLang] && LANG[currentLang][key] !== undefined ?
+                    LANG[currentLang][key] :
+                    (LANG['zh'][key] || key);
+                if (params) {
+                    for (const [k, v] of Object.entries(params)) {
+                        text = text.replace(new RegExp('\\{' + k + '\\}', 'g'), v);
+                    }
+                }
+                return text;
+            }
+
+            function applyLanguage() {
+                // 更新所有 data-i18n 元素
+                const els = document.querySelectorAll('[data-i18n]');
+                for (const el of els) {
+                    const key = el.getAttribute('data-i18n');
+                    const val = i18n(key);
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = val;
+                    } else {
+                        el.textContent = val;
+                    }
+                }
+                // 动态更新状态栏
+                updateStatus();
+                // 更新语言按钮文字
+                document.getElementById('btnLang').textContent = currentLang === 'zh' ? '中文' : 'English';
+                // 重新绘制棋盘（无文字变化，但保持一致性）
+                draw();
+            }
+
+            // ============================================================
+            //  3. 常量 & 游戏状态
+            // ============================================================
+            const BOARD_SIZE = 15;
+            const EMPTY = 0;
+            const BLACK = 1;
+            const WHITE = 2;
+            const WIN_COUNT = 5;
+            const DIRS = [
+                [0, 1],
+                [1, 0],
+                [1, 1],
+                [1, -1]
+            ];
+            const OPP = (p) => (p === BLACK ? WHITE : (p === WHITE ? BLACK : EMPTY));
+
+            let board = createBoard();
+            let history = [];
+            let currentPlayer = BLACK;
+            let gameOver = false;
+            let winLine = null;
+            let lastMove = null;
+            let aiBusy = false;
+            let aiTimer = null;
+
+            let gameMode = 'pvp';
+            let humanSide = BLACK;
+            let aiDifficulty = 'normal';
+            let currentTheme = 'wood';
+
+            // ============================================================
+            //  4. DOM 引用
+            // ============================================================
+            const canvas = document.getElementById('board');
+            const ctx = canvas.getContext('2d');
+            const boardWrap = document.getElementById('boardWrap');
+            const turnText = document.getElementById('turnText');
+            const turnChip = document.getElementById('turnChip');
+            const moveCountEl = document.getElementById('moveCount');
+            const modeTextEl = document.getElementById('modeText');
+            const overlay = document.getElementById('overlay');
+            const dlgTitle = document.getElementById('dlgTitle');
+            const dlgMsg = document.getElementById('dlgMsg');
+            const dlgPrimary = document.getElementById('dlgPrimary');
+            const dlgSecondary = document.getElementById('dlgSecondary');
+
+            const sideSeg = document.getElementById('sideSeg');
+            const sideLabel = document.getElementById('sideLabel');
+            const diffSeg = document.getElementById('diffSeg');
+            const diffLabel = document.getElementById('diffLabel');
+
+            // ============================================================
+            //  5. 模式 / 主题 / 语言 切换
+            // ============================================================
+            function refreshModeUI() {
+                const isAI = gameMode === 'ai';
+                sideSeg.style.display = isAI ? '' : 'none';
+                sideLabel.style.display = isAI ? '' : 'none';
+                diffSeg.style.display = isAI ? '' : 'none';
+                diffLabel.style.display = isAI ? '' : 'none';
+            }
+
+            function setupSeg(id, handler, needsConfirm) {
+                const seg = document.getElementById(id);
+                if (!seg) return;
+                const btns = seg.querySelectorAll('button');
+                btns.forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const val = btn.dataset.val;
+                        if (btn.classList.contains('active')) return;
+                        const doSwitch = () => {
+                            btns.forEach((b) => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            handler(val);
+                        };
+                        if (needsConfirm && history.length > 0) {
+                            confirmDialog(
+                                i18n('dlgSwitchConfirm'),
+                                i18n('dlgSwitchMsg'),
+                                () => { doSwitch();
+                                    hideOverlay(); },
+                                true
+                            );
+                        } else {
+                            doSwitch();
+                        }
+                    });
+                });
+            }
+
+            setupSeg('modeSeg', (val) => {
+                gameMode = val;
+                refreshModeUI();
+                restart();
+                hideOverlay();
+            }, true);
+
+            setupSeg('sideSeg', (val) => {
+                humanSide = val === 'black' ? BLACK : WHITE;
+                restart();
+            }, false);
+
+            setupSeg('diffSeg', (val) => {
+                aiDifficulty = val;
+                restart();
+            }, false);
+
+            setupSeg('themeSeg', (val) => {
+                applyTheme(val);
+            }, false);
+
+            // 语言切换
+            document.getElementById('btnLang').addEventListener('click', function() {
+                currentLang = currentLang === 'zh' ? 'en' : 'zh';
+                applyLanguage();
+                // 重新设置状态栏文字（因为 data-i18n 更新后，动态部分需要重新生成）
+                updateStatus();
+                draw();
+                Sound.click();
+            });
+
+            function applyTheme(name) {
+                currentTheme = name;
+                document.body.classList.remove('theme-wood', 'theme-blue', 'theme-green', 'theme-gray');
+                if (name !== 'wood') document.body.classList.add('theme-' + name);
+                draw();
+            }
+
+            // ============================================================
+            //  6. 音效（Web Audio）
+            // ============================================================
+            const Sound = (function() {
+                let enabled = true;
+                let ctx = null;
+
+                function ensure() {
+                    if (!ctx) {
+                        try {
+                            ctx = new(window.AudioContext || window.webkitAudioContext)();
+                        } catch (e) { ctx = null; }
+                    }
+                    if (ctx && ctx.state === 'suspended') ctx.resume();
+                    return ctx;
+                }
+
+                function tone(freq, dur, type, volume, delay) {
+                    if (!enabled) return;
+                    const c = ensure();
+                    if (!c) return;
+                    const t0 = c.currentTime + (delay || 0);
+                    const osc = c.createOscillator();
+                    const gain = c.createGain();
+                    osc.type = type || 'sine';
+                    osc.frequency.setValueAtTime(freq, t0);
+                    gain.gain.setValueAtTime(0, t0);
+                    gain.gain.linearRampToValueAtTime(volume || 0.15, t0 + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                    osc.connect(gain).connect(c.destination);
+                    osc.start(t0);
+                    osc.stop(t0 + dur + 0.02);
+                }
+
+                function noiseBurst(dur, volume) {
+                    if (!enabled) return;
+                    const c = ensure();
+                    if (!c) return;
+                    const bufferSize = Math.floor(c.sampleRate * dur);
+                    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+                    const src = c.createBufferSource();
+                    src.buffer = buffer;
+                    const gain = c.createGain();
+                    gain.gain.value = volume || 0.25;
+                    const filter = c.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 900;
+                    src.connect(filter).connect(gain).connect(c.destination);
+                    src.start();
+                }
+
+                return {
+                    toggle: () => { enabled = !enabled; return enabled; },
+                    stone: () => { noiseBurst(0.08, 0.35);
+                        tone(260, 0.12, 'triangle', 0.15, 0); },
+                    win: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.25, 'triangle', 0.22, i * 0.12)); },
+                    lose: () => { [330, 262, 196].forEach((f, i) => tone(f, 0.3, 'sine', 0.2, i * 0.14)); },
+                    click: () => tone(880, 0.05, 'square', 0.08),
+                };
+            })();
+
+            document.getElementById('btnSound').addEventListener('click', () => {
+                const on = Sound.toggle();
+                document.getElementById('btnSound').textContent = on ? '🔊 音效' : '🔇 静音';
+            });
+
+            // ============================================================
+            //  7. 画板尺寸
+            // ============================================================
+            let cell = 0;
+            let padding = 0;
+            let dpr = 1;
+
+            function setupCanvas() {
+                const rect = boardWrap.getBoundingClientRect();
+                dpr = window.devicePixelRatio || 1;
+                const logicalSize = Math.floor(Math.min(rect.width, rect.height));
+                padding = Math.round(logicalSize / (BOARD_SIZE - 1 + 1.6) * 0.8);
+                cell = (logicalSize - padding * 2) / (BOARD_SIZE - 1);
+                canvas.style.width = logicalSize + 'px';
+                canvas.style.height = logicalSize + 'px';
+                canvas.width = Math.floor(logicalSize * dpr);
+                canvas.height = Math.floor(logicalSize * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                draw();
+            }
+
+            window.addEventListener('resize', setupCanvas);
+            window.addEventListener('orientationchange', () => setTimeout(setupCanvas, 120));
+
+            // ============================================================
+            //  8. 事件：落子
+            // ============================================================
+            canvas.addEventListener('click', onTap, { passive: true });
+            canvas.addEventListener('touchend', function(e) {
+                if (e.changedTouches && e.changedTouches.length > 0) {
+                    const t = e.changedTouches[0];
+                    handlePointAt(t.clientX, t.clientY);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            function onTap(e) { handlePointAt(e.clientX, e.clientY); }
+
+            function handlePointAt(clientX, clientY) {
+                if (gameOver || aiBusy) return;
+                if (gameMode === 'ai' && currentPlayer !== humanSide) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
+                let col = Math.round((x - padding) / cell);
+                let row = Math.round((y - padding) / cell);
+                if (row < 0) row = 0;
+                if (row >= BOARD_SIZE) row = BOARD_SIZE - 1;
+                if (col < 0) col = 0;
+                if (col >= BOARD_SIZE) col = BOARD_SIZE - 1;
+                if (board[row][col] !== EMPTY) return;
+                placeStone(row, col, currentPlayer, true);
+            }
+
+            // ============================================================
+            //  9. 核心：落子 & 胜负
+            // ============================================================
+            function placeStone(row, col, player, byHuman) {
+                board[row][col] = player;
+                history.push({ row, col, player, byHuman: !!byHuman });
+                lastMove = { row, col };
+                Sound.stone();
+
+                const line = checkWin(row, col, player);
+                if (line) {
+                    winLine = line;
+                    endGame(player);
+                    return;
+                }
+                if (history.length === BOARD_SIZE * BOARD_SIZE) {
+                    endGame(null);
+                    return;
+                }
+                currentPlayer = OPP(player);
+                updateStatus();
+                draw();
+                if (gameMode === 'ai' && currentPlayer !== humanSide && !gameOver) {
+                    scheduleAIMove();
+                }
+            }
+
+            function endGame(winner) {
+                gameOver = true;
+                draw();
+                updateStatus();
+                if (winner === null) {
+                    showOverlay(i18n('dlgDraw'), i18n('dlgDrawMsg'), [
+                        { text: i18n('dlgRestartAgain'), cls: '', onClick: () => { restart();
+                                hideOverlay(); } }
+                    ], false);
+                    return;
+                }
+                const who = winner === BLACK ? i18n('dlgWinBlack') : i18n('dlgWinWhite');
+                const msg = i18n('dlgWinMsg', { who: winner === BLACK ? '黑方' : '白方' });
+                if (gameMode === 'ai') {
+                    winner === humanSide ? Sound.win() : Sound.lose();
+                } else {
+                    Sound.win();
+                }
+                showOverlay(who, msg, [
+                    { text: i18n('dlgRestartAgain'), cls: '', onClick: () => { restart();
+                            hideOverlay(); } }
+                ], false);
+            }
+
+            function checkWin(r, c, player) {
+                for (const [dr, dc] of DIRS) {
+                    let count = 1;
+                    let r1 = r,
+                        c1 = c,
+                        r2 = r,
+                        c2 = c;
+                    let nr = r + dr,
+                        nc = c + dc;
+                    while (inRange(nr, nc) && board[nr][nc] === player) {
+                        count++;
+                        r2 = nr;
+                        c2 = nc;
+                        nr += dr;
+                        nc += dc;
+                    }
+                    nr = r - dr;
+                    nc = c - dc;
+                    while (inRange(nr, nc) && board[nr][nc] === player) {
+                        count++;
+                        r1 = nr;
+                        c1 = nc;
+                        nr -= dr;
+                        nc -= dc;
+                    }
+                    if (count >= WIN_COUNT) return { r1, c1, r2, c2 };
+                }
+                return null;
+            }
+
+            // ============================================================
+            //  10. AI 调度
+            // ============================================================
+            function scheduleAIMove() {
+                if (aiTimer) { clearTimeout(aiTimer);
+                    aiTimer = null; }
+                aiBusy = true;
+                updateStatus();
+                aiTimer = setTimeout(() => {
+                    aiTimer = null;
+                    try {
+                        const move = computeAIMove(aiDifficulty, currentPlayer);
+                        if (move) placeStone(move.row, move.col, currentPlayer, false);
+                    } catch (err) { console.error(err); } finally {
+                        aiBusy = false;
+                        updateStatus();
+                        draw();
+                    }
+                }, aiDifficulty === 'hard' ? 200 : 120);
+            }
+
+            function clearAITimer() {
+                if (aiTimer) { clearTimeout(aiTimer);
+                    aiTimer = null; }
+            }
+
+            // ============================================================
+            //  11. 工具函数
+            // ============================================================
+            function inRange(r, c) { return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE; }
+
+            function createBoard() {
+                const b = new Array(BOARD_SIZE);
+                for (let i = 0; i < BOARD_SIZE; i++) b[i] = new Array(BOARD_SIZE).fill(EMPTY);
+                return b;
+            }
+
+            // ============================================================
+            //  12. 状态栏更新（支持多语言）
+            // ============================================================
+            function updateStatus() {
+                const isAI = gameMode === 'ai';
+                let turnKey = '';
+                let sideLabelKey = '';
+                let diffLabelKey = '';
+
+                if (gameOver) {
+                    turnKey = 'turnGameOver';
+                } else if (isAI) {
+                    if (aiBusy) {
+                        turnKey = 'turnAiThinking';
+                    } else {
+                        if (currentPlayer === BLACK) {
+                            turnKey = humanSide === BLACK ? 'turnHumanBlack' : 'turnAiBlack';
+                        } else {
+                            turnKey = humanSide === WHITE ? 'turnHumanWhite' : 'turnAiWhite';
+                        }
+                    }
+                } else {
+                    turnKey = currentPlayer === BLACK ? 'turnBlack' : 'turnWhite';
+                }
+                turnText.textContent = i18n(turnKey);
+                turnChip.className = 'stone-chip ' + (currentPlayer === BLACK ? 'stone-black' : 'stone-white');
+
+                const n = history.length;
+                moveCountEl.textContent = i18n('moveCount', { n: n });
+
+                if (isAI) {
+                    const sideTxt = humanSide === BLACK ? i18n('sideBlackLabel') : i18n('sideWhiteLabel');
+                    const diffMap = { easy: 'diffEasyLabel', normal: 'diffNormalLabel', hard: 'diffHardLabel' };
+                    const diffTxt = i18n(diffMap[aiDifficulty] || 'diffNormalLabel');
+                    modeTextEl.textContent = i18n('modeAiLabel', { side: sideTxt, diff: diffTxt });
+                } else {
+                    modeTextEl.textContent = i18n('modePvpLabel');
+                }
+            }
+
+            // ============================================================
+            //  13. 对话框
+            // ============================================================
+            function showOverlay(title, msg, buttons, showClose) {
+                dlgTitle.textContent = title;
+                dlgMsg.textContent = msg;
+                dlgPrimary.style.display = 'none';
+                dlgSecondary.style.display = 'none';
+                dlgPrimary.onclick = null;
+                dlgSecondary.onclick = null;
+                dlgPrimary.className = 'btn';
+                dlgSecondary.className = 'btn ghost';
+                if (buttons && buttons.length > 0) {
+                    const primary = buttons[0];
+                    dlgPrimary.textContent = primary.text || i18n('dlgOk');
+                    dlgPrimary.className = 'btn ' + (primary.cls === 'danger' ? 'danger' : '');
+                    dlgPrimary.style.display = '';
+                    dlgPrimary.onclick = () => { primary.onClick && primary.onClick(); };
+                    if (buttons[1]) {
+                        const secondary = buttons[1];
+                        dlgSecondary.textContent = secondary.text || i18n('dlgCancel');
+                        dlgSecondary.className = 'btn ghost' + (secondary.cls === 'danger' ? ' danger' : '');
+                        dlgSecondary.style.display = '';
+                        dlgSecondary.onclick = () => { secondary.onClick && secondary.onClick(); };
+                    }
+                } else if (showClose) {
+                    dlgPrimary.textContent = i18n('dlgClose');
+                    dlgPrimary.style.display = '';
+                    dlgPrimary.onclick = () => hideOverlay();
+                }
+                overlay.classList.add('show');
+            }
+
+            function hideOverlay() { overlay.classList.remove('show'); }
+
+            function confirmDialog(title, msg, onOk, withCancel) {
+                const buttons = [{ text: i18n('dlgOk'), cls: '', onClick: onOk }];
+                if (withCancel) buttons.push({ text: i18n('dlgCancel'), cls: 'ghost', onClick: () => hideOverlay() });
+                showOverlay(title, msg, buttons, false);
+            }
+
+            // ============================================================
+            //  14. 悔棋
+            // ============================================================
+            document.getElementById('btnUndo').addEventListener('click', onUndoClick);
+
+            function onUndoClick() {
+                if (history.length === 0 && !gameOver) {
+                    // 没有可悔的棋
+                    return;
+                }
+                if (gameOver) {
+                    confirmDialog(
+                        i18n('dlgUndoConfirm'),
+                        i18n('dlgUndoMsg'),
+                        () => { hideOverlay();
+                            performUndoFlow(); },
+                        true
+                    );
+                    return;
+                }
+                performUndoFlow();
+            }
+
+            function performUndoFlow() {
+                if (gameMode === 'pvp') {
+                    confirmDialog(
+                        i18n('dlgUndoConfirm'),
+                        i18n('dlgUndoMsg'),
+                        () => { undoOne();
+                            hideOverlay(); },
+                        true
+                    );
+                } else if (gameMode === 'ai') {
+                    if (aiDifficulty === 'easy') {
+                        undoToHumanTurn();
+                        return;
+                    }
+                    const verdict = aiJudgeUndo();
+                    if (verdict.agree) {
+                        confirmDialog(
+                            i18n('dlgAiUndoAgree'),
+                            verdict.reason,
+                            () => { undoToHumanTurn();
+                                hideOverlay(); },
+                            true
+                        );
+                    } else {
+                        confirmDialog(
+                            i18n('dlgAiUndoReject'),
+                            verdict.reason,
+                            () => hideOverlay(),
+                            false
+                        );
+                        dlgSecondary.style.display = 'none';
+                    }
+                }
+            }
+
+            function undoOne() {
+                if (history.length === 0) return;
+                const last = history.pop();
+                board[last.row][last.col] = EMPTY;
+                currentPlayer = last.player;
+                gameOver = false;
+                winLine = null;
+                lastMove = history.length > 0 ? { row: history[history.length - 1].row,
+                    col: history[history.length - 1].col } : null;
+                updateStatus();
+                draw();
+            }
+
+            function undoToHumanTurn() {
+                if (history.length === 0) return;
+                const lastPlayer = history[history.length - 1].player;
+                if (lastPlayer !== humanSide && history.length > 0) undoOne();
+                if (history.length > 0 && history[history.length - 1].player === humanSide) undoOne();
+            }
+
+            function aiJudgeUndo() {
+                const aiSide = OPP(humanSide);
+                const score = evaluateBoardFor(aiSide);
+                const threshold = aiDifficulty === 'hard' ? -200 : 200;
+                if (score > threshold + 800) return { agree: false, reason: i18n('dlgAiUndoReasonGreat') };
+                if (score > threshold + 200) return { agree: false, reason: i18n('dlgAiUndoReasonAdv') };
+                if (score > threshold) return { agree: false, reason: i18n('dlgAiUndoReasonSlight') };
+                if (score > threshold - 400) return { agree: true, reason: i18n('dlgAiUndoReasonTie') };
+                return { agree: true, reason: i18n('dlgAiUndoReasonBad') };
+            }
+
+            // ============================================================
+            //  15. 重开
+            // ============================================================
+            document.getElementById('btnRestart').addEventListener('click', () => {
+                confirmDialog(
+                    i18n('dlgRestartConfirm'),
+                    i18n('dlgRestartMsg'),
+                    () => { restart();
+                        hideOverlay(); },
+                    true
+                );
+            });
+
+            function restart() {
+                clearAITimer();
+                board = createBoard();
+                history = [];
+                currentPlayer = BLACK;
+                gameOver = false;
+                winLine = null;
+                lastMove = null;
+                aiBusy = false;
+                hideOverlay();
+                updateStatus();
+                draw();
+                if (gameMode === 'ai' && humanSide === WHITE) {
+                    scheduleAIMove();
+                }
+            }
+
+            // ============================================================
+            //  16. AI 核心算法
+            // ============================================================
+            function computeAIMove(difficulty, player) {
+                if (history.length === 0) {
+                    return { row: 7, col: 7 };
+                }
+                if (difficulty === 'easy') return aiEasy(player);
+                if (difficulty === 'normal') return aiNormal(player);
+                return aiHard(player);
+            }
+
+            function generateCandidates(radius) {
+                const seen = new Set();
+                const result = [];
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (board[r][c] === EMPTY) continue;
+                        for (let dr = -radius; dr <= radius; dr++) {
+                            for (let dc = -radius; dc <= radius; dc++) {
+                                const nr = r + dr,
+                                    nc = c + dc;
+                                if (!inRange(nr, nc)) continue;
+                                if (board[nr][nc] !== EMPTY) continue;
+                                const key = nr * BOARD_SIZE + nc;
+                                if (seen.has(key)) continue;
+                                seen.add(key);
+                                result.push({ row: nr, col: nc });
+                            }
+                        }
+                    }
+                }
+                if (result.length === 0) {
+                    for (let r = 0; r < BOARD_SIZE; r++) {
+                        for (let c = 0; c < BOARD_SIZE; c++) {
+                            if (board[r][c] === EMPTY) result.push({ row: r, col: c });
+                        }
+                    }
+                }
+                return result;
+            }
+
+            function aiEasy(player) {
+                const opp = OPP(player);
+                const cands = generateCandidates(1);
+                for (const m of cands) {
+                    if (isImmediateWin(m.row, m.col, player)) return m;
+                }
+                for (const m of cands) {
+                    if (isImmediateWin(m.row, m.col, opp)) return m;
+                }
+                const scored = cands.map((m) => ({
+                    m,
+                    s: scorePoint(m.row, m.col, player) + scorePoint(m.row, m.col, opp) * 0.8,
+                }));
+                scored.sort((a, b) => b.s - a.s);
+                const top = scored.slice(0, Math.min(6, scored.length));
+                return top[Math.floor(Math.random() * top.length)].m;
+            }
+
+            function aiNormal(player) {
+                const opp = OPP(player);
+                const cands = generateCandidates(2);
+                const pre = cands.map((m) => ({
+                    m,
+                    s: scorePoint(m.row, m.col, player) + scorePoint(m.row, m.col, opp),
+                }));
+                pre.sort((a, b) => b.s - a.s);
+                const shortlist = pre.slice(0, 15);
+                let bestScore = -Infinity;
+                let bestMoves = [];
+                for (const item of shortlist) {
+                    const { m } = item;
+                    board[m.row][m.col] = player;
+                    const myScore = evaluateBoardFor(player);
+                    board[m.row][m.col] = EMPTY;
+                    board[m.row][m.col] = opp;
+                    const oppScore = evaluateBoardFor(opp);
+                    board[m.row][m.col] = EMPTY;
+                    const s = myScore * 1.0 + oppScore * 0.9;
+                    if (s > bestScore) {
+                        bestScore = s;
+                        bestMoves = [m];
+                    } else if (s === bestScore) {
+                        bestMoves.push(m);
+                    }
+                }
+                if (bestMoves.length === 0) return cands[0];
+                return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+            }
+
+            function aiHard(player) {
+                const opp = OPP(player);
+                const cands = generateCandidates(2);
+                for (const m of cands) {
+                    if (isImmediateWin(m.row, m.col, player)) return m;
+                }
+                for (const m of cands) {
+                    if (isImmediateWin(m.row, m.col, opp)) return m;
+                }
+                const pre = cands.map((m) => ({
+                    m,
+                    s: scorePoint(m.row, m.col, player) + scorePoint(m.row, m.col, opp),
+                }));
+                pre.sort((a, b) => b.s - a.s);
+                const topLevel = pre.slice(0, 10);
+                let bestScore = -Infinity;
+                let bestMove = topLevel[0].m;
+                const searchDepth = 4;
+                for (const item of topLevel) {
+                    const m = item.m;
+                    board[m.row][m.col] = player;
+                    if (checkWin(m.row, m.col, player)) {
+                        board[m.row][m.col] = EMPTY;
+                        return m;
+                    }
+                    const score = minimax(searchDepth - 1, -Infinity, Infinity, false, player);
+                    board[m.row][m.col] = EMPTY;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = m;
+                    }
+                }
+                return bestMove;
+            }
+
+            function minimax(depth, alpha, beta, isMax, aiPlayer) {
+                const opp = OPP(aiPlayer);
+                if (depth === 0) {
+                    return evaluateBoardFor(aiPlayer);
+                }
+                const side = isMax ? aiPlayer : opp;
+                const cands = generateCandidates(2);
+                const pre = cands.map((m) => ({
+                    m,
+                    s: scorePoint(m.row, m.col, side) + scorePoint(m.row, m.col, OPP(side)),
+                }));
+                pre.sort((a, b) => b.s - a.s);
+                const shortlist = pre.slice(0, 8);
+
+                if (isMax) {
+                    let value = -Infinity;
+                    for (const item of shortlist) {
+                        const m = item.m;
+                        board[m.row][m.col] = side;
+                        if (checkWin(m.row, m.col, side)) {
+                            board[m.row][m.col] = EMPTY;
+                            return 1e9 + depth;
+                        }
+                        const v = minimax(depth - 1, alpha, beta, false, aiPlayer);
+                        board[m.row][m.col] = EMPTY;
+                        if (v > value) value = v;
+                        if (value > alpha) alpha = value;
+                        if (alpha >= beta) break;
+                    }
+                    return value;
+                } else {
+                    let value = Infinity;
+                    for (const item of shortlist) {
+                        const m = item.m;
+                        board[m.row][m.col] = side;
+                        if (checkWin(m.row, m.col, side)) {
+                            board[m.row][m.col] = EMPTY;
+                            return -1e9 - depth;
+                        }
+                        const v = minimax(depth - 1, alpha, beta, true, aiPlayer);
+                        board[m.row][m.col] = EMPTY;
+                        if (v < value) value = v;
+                        if (value < beta) beta = value;
+                        if (alpha >= beta) break;
+                    }
+                    return value;
+                }
+            }
+
+            function isImmediateWin(r, c, player) {
+                board[r][c] = player;
+                const win = checkWin(r, c, player);
+                board[r][c] = EMPTY;
+                return !!win;
+            }
+
+            // ============================================================
+            //  17. 评估函数
+            // ============================================================
+            function scorePoint(r, c, player) {
+                let score = 0;
+                for (const [dr, dc] of DIRS) {
+                    score += linePotential(r, c, dr, dc, player);
+                }
+                return score;
+            }
+
+            function linePotential(r, c, dr, dc, player) {
+                let stones = 0;
+                let openEnds = 0;
+                let countFwd = 0;
+                let nr = r + dr,
+                    nc = c + dc;
+                while (inRange(nr, nc) && board[nr][nc] === player && countFwd < 4) {
+                    countFwd++;
+                    nr += dr;
+                    nc += dc;
+                }
+                if (inRange(nr, nc) && board[nr][nc] === EMPTY) openEnds++;
+                let countBwd = 0;
+                nr = r - dr;
+                nc = c - dc;
+                while (inRange(nr, nc) && board[nr][nc] === player && countBwd < 4) {
+                    countBwd++;
+                    nr -= dr;
+                    nc -= dc;
+                }
+                if (inRange(nr, nc) && board[nr][nc] === EMPTY) openEnds++;
+                stones = countFwd + countBwd + 1;
+                if (stones >= 5) return 100000;
+                if (stones === 4) return openEnds === 2 ? 10000 : (openEnds === 1 ? 1000 : 0);
+                if (stones === 3) return openEnds === 2 ? 1000 : (openEnds === 1 ? 100 : 0);
+                if (stones === 2) return openEnds === 2 ? 100 : (openEnds === 1 ? 10 : 0);
+                if (stones === 1) return openEnds === 2 ? 10 : (openEnds === 1 ? 1 : 0);
+                return 0;
+            }
+
+            function evaluateBoardFor(player) {
+                const opp = OPP(player);
+                let myScore = 0;
+                let oppScore = 0;
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    myScore += scanLine(r, 0, 0, 1, player);
+                    oppScore += scanLine(r, 0, 0, 1, opp);
+                }
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    myScore += scanLine(0, c, 1, 0, player);
+                    oppScore += scanLine(0, c, 1, 0, opp);
+                }
+                for (let k = 0; k < BOARD_SIZE; k++) {
+                    myScore += scanLine(0, k, 1, 1, player);
+                    oppScore += scanLine(0, k, 1, 1, opp);
+                    if (k !== 0) {
+                        myScore += scanLine(k, 0, 1, 1, player);
+                        oppScore += scanLine(k, 0, 1, 1, opp);
+                    }
+                }
+                for (let k = 0; k < BOARD_SIZE; k++) {
+                    myScore += scanLine(0, k, 1, -1, player);
+                    oppScore += scanLine(0, k, 1, -1, opp);
+                    if (k !== 0) {
+                        myScore += scanLine(k, BOARD_SIZE - 1, 1, -1, player);
+                        oppScore += scanLine(k, BOARD_SIZE - 1, 1, -1, opp);
+                    }
+                }
+                return myScore - oppScore * 1.1;
+            }
+
+            function scanLine(startR, startC, dr, dc, player) {
+                let len = 0;
+                {
+                    let rr = startR,
+                        cc = startC;
+                    while (inRange(rr, cc)) { len++;
+                        rr += dr;
+                        cc += dc; }
+                }
+                if (len < 5) return 0;
+                let score = 0;
+                let r = startR,
+                    c = startC;
+                let i = 0;
+                while (i < len) {
+                    const cellVal = board[r][c];
+                    if (cellVal !== player) { i++;
+                        r += dr;
+                        c += dc; continue; }
+                    let j = i;
+                    let rr = r,
+                        cc = c;
+                    while (j < len && board[rr][cc] === player) { j++;
+                        rr += dr;
+                        cc += dc; }
+                    const segLen = j - i;
+                    const leftR = r - dr,
+                        leftC = c - dc;
+                    const leftOpen = inRange(leftR, leftC) && board[leftR][leftC] === EMPTY;
+                    const rightOpen = inRange(rr, cc) && board[rr][cc] === EMPTY;
+                    const openEnds = (leftOpen ? 1 : 0) + (rightOpen ? 1 : 0);
+                    if (segLen >= 5) {
+                        score += 100000;
+                    } else if (segLen === 4) {
+                        if (openEnds === 2) score += 10000;
+                        else if (openEnds === 1) score += 1000;
+                    } else if (segLen === 3) {
+                        if (openEnds === 2) score += 1000;
+                        else if (openEnds === 1) score += 100;
+                    } else if (segLen === 2) {
+                        if (openEnds === 2) score += 100;
+                        else if (openEnds === 1) score += 10;
+                    } else if (segLen === 1) {
+                        if (openEnds === 2) score += 5;
+                    }
+                    i = j;
+                    r = rr;
+                    c = cc;
+                }
+                return score;
+            }
+
+            // ============================================================
+            //  18. 绘制
+            // ============================================================
+            function draw() {
+                const w = canvas.width / dpr;
+                const h = canvas.height / dpr;
+                const styles = window.getComputedStyle(document.body);
+                const c1 = styles.getPropertyValue('--board-a').trim() || '#efc28a';
+                const c2 = styles.getPropertyValue('--board-b').trim() || '#cf9960';
+                const lineColor = styles.getPropertyValue('--board-line').trim() || 'rgba(70, 40, 10, 0.85)';
+                const starColor = styles.getPropertyValue('--board-star').trim() || 'rgba(40, 20, 5, 0.9)';
+                const borderColor = styles.getPropertyValue('--board-border').trim() || 'rgba(50, 25, 5, 0.95)';
+
+                const grad = ctx.createLinearGradient(0, 0, w, h);
+                grad.addColorStop(0, c1);
+                grad.addColorStop(1, c2);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.strokeStyle = lineColor;
+                ctx.lineWidth = Math.max(1, cell * 0.035);
+                ctx.lineCap = 'round';
+                for (let i = 0; i < BOARD_SIZE; i++) {
+                    const p = padding + i * cell;
+                    ctx.beginPath();
+                    ctx.moveTo(padding, p);
+                    ctx.lineTo(padding + cell * (BOARD_SIZE - 1), p);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(p, padding);
+                    ctx.lineTo(p, padding + cell * (BOARD_SIZE - 1));
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = Math.max(1.5, cell * 0.07);
+                ctx.strokeRect(padding - ctx.lineWidth / 2, padding - ctx.lineWidth / 2,
+                    cell * (BOARD_SIZE - 1) + ctx.lineWidth,
+                    cell * (BOARD_SIZE - 1) + ctx.lineWidth);
+
+                const stars = [
+                    [3, 3],
+                    [3, 11],
+                    [7, 7],
+                    [11, 3],
+                    [11, 11]
+                ];
+                ctx.fillStyle = starColor;
+                for (const [r, c] of stars) {
+                    ctx.beginPath();
+                    ctx.arc(padding + c * cell, padding + r * cell, Math.max(2, cell * 0.07), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (board[r][c] !== EMPTY) drawStone(r, c, board[r][c]);
+                    }
+                }
+
+                if (lastMove) {
+                    const { row, col } = lastMove;
+                    const cx = padding + col * cell;
+                    const cy = padding + row * cell;
+                    ctx.strokeStyle = board[row][col] === BLACK ? '#ff5a5a' : '#e33';
+                    ctx.lineWidth = Math.max(1.5, cell * 0.06);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cell * 0.18, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (winLine) {
+                    const x1 = padding + winLine.c1 * cell;
+                    const y1 = padding + winLine.r1 * cell;
+                    const x2 = padding + winLine.c2 * cell;
+                    const y2 = padding + winLine.r2 * cell;
+                    ctx.strokeStyle = 'rgba(220, 40, 40, 0.9)';
+                    ctx.lineWidth = Math.max(2, cell * 0.1);
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+
+            function drawStone(r, c, player) {
+                const cx = padding + c * cell;
+                const cy = padding + r * cell;
+                const radius = cell * 0.45;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+                ctx.shadowBlur = Math.max(2, cell * 0.08);
+                ctx.shadowOffsetX = Math.max(1, cell * 0.03);
+                ctx.shadowOffsetY = Math.max(2, cell * 0.06);
+
+                const g = ctx.createRadialGradient(
+                    cx - radius * 0.35, cy - radius * 0.4, radius * 0.1,
+                    cx, cy, radius
+                );
+                if (player === BLACK) {
+                    g.addColorStop(0, '#6a6a6a');
+                    g.addColorStop(0.5, '#1a1a1a');
+                    g.addColorStop(1, '#000');
+                } else {
+                    g.addColorStop(0, '#ffffff');
+                    g.addColorStop(0.7, '#e8e8e8');
+                    g.addColorStop(1, '#b8b8b8');
+                }
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                const hi = ctx.createRadialGradient(
+                    cx - radius * 0.4, cy - radius * 0.45, 0,
+                    cx - radius * 0.4, cy - radius * 0.45, radius * 0.6
+                );
+                hi.addColorStop(0, player === BLACK ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)');
+                hi.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = hi;
+                ctx.beginPath();
+                ctx.arc(cx - radius * 0.15, cy - radius * 0.25, radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // ============================================================
+            //  19. 初始化
+            // ============================================================
+            // 设置初始语言（根据浏览器或默认中文）
+            const browserLang = navigator.language || 'zh';
+            currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+
+            // 刷新UI控件状态
+            refreshModeUI();
+
+            // 应用语言
+            applyLanguage();
+
+            // 设置画布
+            setupCanvas();
+
+            // 更新状态
+            updateStatus();
+
+            // 如果 AI 模式且玩家执白，AI 先下
+            if (gameMode === 'ai' && humanSide === WHITE) {
+                scheduleAIMove();
+            }
+
+            // 修复：初始时音效按钮显示正确
+            document.getElementById('btnSound').textContent = '🔊 音效';
+
+        })();
+    </script>
+</body>
+</html>
