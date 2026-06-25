@@ -48,25 +48,15 @@
 ## 🚀 本地运行
 
 1. 克隆仓库：
-   ```bash
-   git clone https://github.com/Yang-2026-user/My-Repository.git
-```
 
-2. 进入目录，直接用浏览器打开 index.html 即可：
-   ```bash
+   git clone https://github.com/Yang-2026-user/My-Repository.git
+
+3. 进入目录，直接用浏览器打开 index.html 即可：
+
    cd My-Repository
    open index.html   # 或双击文件
-   ```
 
 无需安装任何工具，无需启动服务器。
-
-🌐 部署到 GitHub Pages
-
-如果你想把游戏发布到线上：
-
-1. 进入仓库 Settings → Pages。
-2. 将分支设置为 main（或 master），目录选择 / (root)。
-3. 保存后，等待几分钟，访问 https://yang-2026-user.github.io/My-Repository/ 即可。
 
 🛠️ 技术实现要点
 
@@ -74,12 +64,6 @@
 · AI 引擎：基于 Negamax 搜索 + Alpha-Beta 剪枝，配合杀手启发、历史启发、置换表、开局库。
 · 局面去重：采用 Zobrist 哈希检测重复局面（长将判和）。
 · 语言包：内置 I18N 对象，支持中英文界面及棋子名称切换。
-
-📝 待改进 / 已知限制
-
-· AI 在“大师”难度下思考时间较长（约 9 秒），请耐心等待。
-· 移动端可能因屏幕尺寸导致点击偏差，建议在横屏模式下使用。
-· 目前不支持保存/加载棋局（后续可考虑添加）。
 
 📄 许可证
 
