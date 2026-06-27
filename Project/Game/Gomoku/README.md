@@ -9,7 +9,7 @@ A classic **Gomoku (Five-in-a-Row)** game with a sleek UI and multiple AI diffic
 
 一款界面优雅、AI难度分级（从“简单”到“大师”）的五子棋对战游戏。支持**人机对战**与**双人对战**两种模式。
 
-🔗 **Live Demo**: [Play Now](https://yang-2026-user.github.io/My-Repository/Project/Game/index.html)  
+🔗 **Live Demo**: [Play Now](https://yang-2026-user.github.io/My-Repository/Project/Game/Gomoku/)  
 📦 **Repository**: [Yang-2026-user/My-Repository](https://github.com/Yang-2026-user/My-Repository)
 
 ---
@@ -42,7 +42,7 @@ A classic **Gomoku (Five-in-a-Row)** game with a sleek UI and multiple AI diffic
 
 ### 在线游玩 (Play Online)
 直接访问 GitHub Pages 部署的链接：
-👉 **[https://yang-2026-user.github.io/My-Repository/Project/Game/index.html](https://yang-2026-user.github.io/My-Repository/Project/Game/index.html)**
+👉 **[https://yang-2026-user.github.io/My-Repository/Project/Game/Gomoku/](https://yang-2026-user.github.io/My-Repository/Project/Game/Gomoku/)**
 
 ### 本地运行 (Run Locally)
 1.  **Clone** 本仓库到本地：
@@ -51,7 +51,7 @@ A classic **Gomoku (Five-in-a-Row)** game with a sleek UI and multiple AI diffic
     ```
 2.  进入游戏目录：
     ```bash
-    cd My-Repository/Project/Game
+    cd My-Repository/Project/Game/Gomoku/
     ```
 3.  双击 `index.html` 文件，即可在浏览器中打开游戏。
 
