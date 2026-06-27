@@ -2,9 +2,9 @@
 
 一个功能丰富、可直接在浏览器中运行的中国象棋游戏，支持人机对战、双人对战、多级 AI 难度、主题切换及棋局管理。
 
-![游戏截图](screenshot.png) *(请将截图文件放入仓库，或删除此行)*
+![游戏截图](screenshot.png)
 
-[👉 在线试玩](https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/) *(请替换为你的实际部署链接)*
+[👉 在线试玩](https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/)
 
 ## ✨ 主要特性
 
