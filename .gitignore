@@ -1,0 +1,22 @@
+# 操作系统生成文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# 项目特定（如有本地测试生成的临时文件）
+*.fen
+*.bak
