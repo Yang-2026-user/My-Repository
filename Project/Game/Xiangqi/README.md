@@ -1,79 +1,64 @@
-# 中国象棋 (Chinese Chess) v5.1
+# 中国象棋 (Chinese Chess) v5.1.1
 
-一个功能丰富、可直接在浏览器中运行的中国象棋游戏，支持人机对战、双人对战、多级 AI 难度、主题切换及棋局管理。
+> 功能丰富的中国象棋游戏，支持人机对战、双人对战、多级 AI 难度、主题切换及棋局管理。  
+> A feature-rich Chinese Chess game with PvP, PvAI, multiple AI difficulty levels, theme switching, and game management.
 
-![游戏截图](screenshot.png)
+🔗 **在线试玩 (Live Demo)**：https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/
 
-[👉 在线试玩](https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/)
+---
 
-## ✨ 主要特性
+## ✨ 核心特性 (Key Features)
 
-*   **两种对战模式**：
-    *   **双人对战 (PvP)**：两位玩家轮流在同一设备上对弈。
-    *   **人机对战 (PvAI)**：与 AI 电脑对战，AI 提供 4 级难度可选（简单、普通、困难、大师）。
-*   **智能 AI 对手**：AI 采用 Negamax 搜索算法，结合 Alpha-Beta 剪枝、置换表、杀手走法、空着裁剪和静态搜索，在“大师”难度下具备较强的棋力。
-*   **5 套精美主题**：内置经典、暗黑、明亮、翡翠、海军 5 套配色方案，可根据喜好自由切换，主题偏好会自动保存在浏览器中。
-*   **完整棋局管理**：
-    *   **悔棋**：支持悔一步棋（人机模式下需 AI 同意）。
-    *   **保存/加载**：可将当前棋局保存到浏览器本地，随时加载继续对弈。
-    *   **FEN 导入/导出**：支持导出标准 FEN 格式棋局记录，也可导入合法的 FEN 字符串快速恢复特定局面。
-*   **音效反馈**：走子、吃子、被将军、胜负判定均有对应的音效提示，增强对弈沉浸感。
-*   **多语言支持**：界面内置中文和英文两种语言，可一键切换。
-*   **响应式设计**：完美适配桌面端和移动端，在手机和平板上也能流畅操作。
+- **两种对战模式 (Two Battle Modes)**：双人对战 (PvP) / 人机对战 (PvAI)
+- **智能 AI 对手 (Smart AI)**：4 级难度（简单/普通/困难/大师），基于 Negamax + Alpha-Beta 剪枝  
+  4 difficulty levels (Easy/Normal/Hard/Master) with Negamax + Alpha-Beta pruning
+- **5 套精美主题 (5 Beautiful Themes)**：经典/暗黑/明亮/翡翠/海军，偏好自动保存  
+  Classic/Dark/Light/Jade/Navy, automatically saved in browser
+- **棋局管理 (Game Management)**：悔棋 / 保存 / 加载 / FEN 导入导出  
+  Undo / Save / Load / FEN import & export
+- **音效反馈 (Sound Feedback)** + **多语言支持 (Multi-language)**：中文 / English
 
-## 🚀 快速开始
+---
 
-### 在线游玩
-直接访问项目的 [GitHub Pages 页面](https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/) 即可开始游戏。
+## 🚀 快速开始 (Getting Started)
 
-### 本地运行
-1.  克隆或下载本仓库到本地。
-2.  由于这是一个纯前端项目，不需要任何构建工具，直接双击 `index.html` 文件即可在浏览器中打开游玩。
+### 在线游玩 (Play Online)
+直接访问 [GitHub Pages 链接](https://yang-2026-user.github.io/My-Repository/Project/Game/Xiangqi/) 即可开始游戏。
 
-## 🎮 游戏指南
-
-1.  **模式选择**：点击“双人对战”或“人机对战”切换模式。
-2.  **走子**：**点击**一个己方棋子，再**点击**高亮显示的合法目标格即可走子。
-3.  **AI 难度**：在人机模式下，可选择“简单”至“大师” 4 档难度。
-4.  **主题切换**：在“主题”区域点击色块即可切换画风。
-5.  **高级功能**：
-    *   **FEN**：点击“FEN”按钮可展开面板，查看当前局面的 FEN 串，支持一键复制、下载为 `.fen` 文件或导入其他 FEN 串。
-    *   **存档**：点击“保存”可存储当前对局，点击“加载”可恢复。
-
-## 🗂️ 项目结构
-
+### 本地运行 (Run Locally)
+```bash
+git clone https://github.com/Yang-2026-user/My-Repository.git
+cd My-Repository/Project/Game/Xiangqi/
+# 双击 index.html 即可在浏览器中打开
+# Double-click index.html to open in browser
 ```
 
-My-Repository/
-└── Project/
-└── Game/
-└── index.html   # 完整游戏代码（HTML + CSS + JavaScript）
+---
 
-```
+## 🎮 游戏指南 (How to Play)
 
-## 🛠️ 技术实现
+1. **模式选择 (Mode)**：点击“双人对战”或“人机对战”切换  
+   Click "PvP" or "vs AI" to switch modes
+2. **走子 (Move)**：**点击** 己方棋子，再**点击** 高亮目标格  
+   **Click** your piece, then **click** the highlighted target
+3. **AI 难度 (AI Difficulty)**：人机模式下选择简单至大师 4 档  
+   Select from Easy to Master under AI mode
+4. **主题切换 (Theme)**：点击色块切换画风  
+   Click color blocks to switch themes
+5. **FEN 功能**：导出/复制/下载/导入 FEN 格式棋局记录  
+   Export/Copy/Download/Import FEN format game records
 
-*   **纯前端**：所有代码集成在一个 `index.html` 文件中，无需任何外部依赖。
-*   **AI 算法**：
-    *   基于 **Negamax 框架** 的博弈树搜索。
-    *   **Alpha-Beta 剪枝** 优化搜索效率。
-    *   **置换表 (Transposition Table)** 缓存已搜索局面。
-    *   **杀手走法 (Killer Move)** 与 **历史启发 (History Heuristic)** 优化走法排序。
-    *   **静态搜索 (Quiescence Search)** 减少“水平效应”。
-    *   **空着裁剪 (Null-Move Pruning)** 加速搜索。
-*   **数据持久化**：使用 `localStorage` 保存主题偏好和棋局存档。
-*   **FEN 支持**：支持标准 FEN 格式的导入与导出，方便棋局记录与分享。
+---
 
-## 🤝 贡献
+## 🛠️ 技术栈 (Tech Stack)
 
-欢迎提出 Issue 或 Pull Request 来帮助改进这个项目。
+- **HTML5** + **CSS3** (Flexbox/Grid, 响应式 Responsive)
+- **Vanilla JavaScript (ES6)**：纯原生，无第三方依赖  
+  Pure native JS, no third-party dependencies
 
-1.  Fork 本仓库
-2.  创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3.  提交你的更改 (`git commit -m 'Add some AmazingFeature'`)
-4.  推送到分支 (`git push origin feature/AmazingFeature`)
-5.  打开一个 Pull Request
+---
 
-## 📄 许可证
+## 📄 许可证 (License)
 
-本项目采用 MIT 许可证。详情请见 [LICENSE](LICENSE) 文件。
+本项目采用 **MIT License**。详见仓库根目录的 `LICENSE` 文件。  
+This project is licensed under the **MIT License**. See the `LICENSE` file in the repository root for details.
