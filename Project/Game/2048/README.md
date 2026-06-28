@@ -2,7 +2,7 @@
 
 一个经典的数字合并游戏，直接在浏览器中运行。通过 **滑动 (Swipe)** 或 **键盘方向键 (Arrow Keys)** 移动所有方块，相同数字会 **合并 (Merge)**，目标是拼出 **2048** 这个数字！
 
-![游戏截图](screenshot.png) 
+![游戏截图](Game/2048/screenshot.png) 
 
 [👉 在线试玩](https://yang-2026-user.github.io/My-Repository/Project/Game/2048/) 
 
