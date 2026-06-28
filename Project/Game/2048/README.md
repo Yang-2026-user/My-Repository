@@ -1,62 +1,79 @@
-# 2048 Game 🧩
+2048 Puzzle Game (v1.0.0)
 
-一个经典的数字合并游戏，直接在浏览器中运行。通过 **滑动 (Swipe)** 或 **键盘方向键 (Arrow Keys)** 移动所有方块，相同数字会 **合并 (Merge)**，目标是拼出 **2048** 这个数字！
+🎮 欢迎体验这款经典的 2048 数字合并游戏！本项目是一个完全基于原生 HTML、CSS 和 JavaScript 开发的轻量级 Web 应用。无需任何外部依赖，打开即玩。代码已开源，遵循 **MIT License**。
 
-![游戏截图](Game/2048/screenshot.png) 
+> 🌐 **在线试玩 (Live Demo)**：  
+> [https://yang-2026-user.github.io/My-Repository/Project/Game/2048/index.html](https://yang-2026-user.github.io/My-Repository/Project/Game/2048/)  
+>
 
-[👉 在线试玩](https://yang-2026-user.github.io/My-Repository/Project/Game/2048/) 
+> 🌐 **游戏截图 (Game screenshot)**
+>![游戏运行界面](./screenshot.png)
 
-## ✨ 特性 (Features)
+---
 
--   **核心玩法 (Core Gameplay)**：经典的 4x4 网格滑动合并，规则简单，令人上瘾。
--   **双控制方式 (Dual Controls)**：完美支持 **键盘方向键 (Keyboard Arrow Keys)** 和 **触摸滑动 (Touch Swipe)**，在电脑和手机上都能流畅游玩。
--   **分数追踪 (Score Tracking)**：实时记录当前 **得分 (Score)**，并自动将 **最高分 (Best Score)** 保存在你的浏览器中，挑战自己的记录。
--   **响应式设计 (Responsive Design)**：界面适配各种屏幕尺寸，无论在桌面、平板还是手机上，都能获得最佳的游戏体验。
--   **视觉反馈 (Visual Feedback)**：方块合并与出现带有流畅的 **动画效果 (Animation)**，操作反馈清晰直观。
--   **游戏状态 (Game States)**：当拼出 2048 时，会显示胜利祝贺；当所有格子填满且无路可走时，游戏结束并显示最终得分。
+## ✨ 核心特性 (Key Features)
 
-## 🚀 如何开始 (How to Play)
+- **极简交互与视觉 (Minimalist Design)**：还原了经典的米色风格 UI，卡片动画平滑，支持移动端和桌面端自适应。
+- **双端操控 (Dual Controls)**：
+  - 💻 **PC端**：支持键盘方向键 (`↑`, `↓`, `←`, `→`) 操控。
+  - 📱 **移动端**：完美支持触摸滑动 (Touch Swipe)，并已禁用页面滚动以提升游戏体验。
+- **智能计分系统 (Smart Scoring)**：实时更新当前得分与最高分 (Best Score)，并使用 `localStorage` 在本地自动保存您的最高纪录。
+- **游戏状态管理**：包含自动检测“游戏结束 (Game Over)”与“达成 2048 胜利 (Victory)”的机制，并配有友好的弹窗提示。
+- **开源与版权 (Open Source)**：基于 MIT License 发布，欢迎 Fork、学习或二次开发。
 
-1.  **访问游戏 (Access)**：点击上面的链接或直接打开仓库中的 `index.html` 文件。
-2.  **开始移动 (Start Moving)**：
-    -   在 **电脑 (Desktop)** 上：使用键盘的 **方向键 (↑ ↓ ← →)** 控制方块滑动方向。
-    -   在 **触屏设备 (Touch Device)** 上：在游戏面板上 **滑动 (Swipe)** 手指控制方向。
-3.  **合并与得分 (Merge & Score)**：每次滑动，所有方块会向该方向移动。两个相同数字的方块相撞时会 **合并 (Merge)** 成一个数字，并增加相应 **得分 (Score)**。
-4.  **目标 (Goal)**：不断合并，直到拼出数字 **2048**！
+---
 
-## 🗂️ 项目结构 (Project Structure)
+## 🚀 如何本地运行 (How to Run Locally)
+
+由于这是一个纯前端的 Web 项目，您甚至不需要搭建复杂的服务器。最简单的运行方式如下：
+
+1. **克隆仓库** 到您的本地机器：
+   ```bash
+   git clone https://github.com/Yang-2026-user/My-Repository.git
+   ```
+2. 进入项目目录：
+   ```bash
+   cd My-Repository/Project/Game/2048
+   ```
+3. 双击 **`index.html`** 文件，它将在您的默认浏览器中直接打开并运行。
+
+> 💡 **提示**：若需在移动设备上测试，您可以使用 VS Code 的 **Live Server** 插件，或使用 `python -m http.server` 启动一个简单的本地服务，然后通过局域网访问。
+
+---
+
+## 📂 项目结构 (Project Structure)
 
 ```text
-My-Repository/
-└── Game/
-    └── 2048/
-        └── index.html   # 完整的游戏代码 (All-in-one HTML file)
+2048/
+├── index.html          # 主入口文件：包含 HTML, CSS 样式和游戏核心 JS 逻辑
+├── README.md           # 项目说明文档 (您正在阅读的此文件)
+└── (其他文件夹)        # 项目根目录可能包含的其他模块
 ```
 
-## 🛠️ 技术实现 (Tech Stack)
+---
 
--   **纯前端 (Pure Frontend)**：所有代码集成在一个 `index.html` 文件中，无需任何外部依赖或构建工具。
--   **原生 JavaScript (Vanilla JS)**：使用原生 JavaScript 实现游戏逻辑、DOM 操作和动画控制。
--   **CSS3 动画 (CSS3 Animations)**：利用 CSS 实现方块生成和合并的过渡效果，提升用户体验。
--   **本地存储 (LocalStorage)**：使用浏览器的 `localStorage` API 持久化保存玩家的最高分。
+## 🛠️ 技术栈 (Tech Stack)
 
-## 🤝 贡献 (Contributing)
+- **HTML5** - 页面结构
+- **CSS3** (Flexbox/Grid) - 响应式布局与精美动画
+- **Vanilla JavaScript (ES6)** - 核心游戏逻辑 (无任何第三方库或框架)
 
-欢迎提出 Issue 或 Pull Request 来帮助改进这个项目。
+---
 
-1.  Fork 本仓库 (Fork the repo)
-2.  创建你的特性分支 (Create your feature branch: `git checkout -b feature/AmazingFeature`)
-3.  提交你的更改 (Commit your changes: `git commit -m 'Add some AmazingFeature'`)
-4.  推送到分支 (Push to the branch: `git push origin feature/AmazingFeature`)
-5.  打开一个 Pull Request (Open a Pull Request)
+## 📝 致谢 (Acknowledgments)
 
-## 📝 致谢 (Acknowledgements)
+- 感谢 **Gabriele Cirulli** 创造的经典 2048 游戏，为无数开发者带来了灵感与乐趣。  
+  *(Thanks to Gabriele Cirulli for creating the classic 2048 game, inspiring countless developers with fun and creativity.)*
 
--   感谢 **Gabriele Cirulli** 创造的经典 2048 游戏，为这个世界带来了如此多的乐趣。
--   感谢所有为开源社区贡献力量的开发者，你们的分享精神让学习和创作变得更加美好。
+- 感谢所有为开源社区贡献力量的开发者，正是你们的无私奉献让技术生态如此繁荣。  
+  *(Thanks to all developers who contribute to the open-source community. Your selfless dedication makes our tech ecosystem so vibrant.)*
 
-## 📌 版本历史
+---
 
-| 版本 | 日期 | 说明 |
-|------|------|------|
-| v1.0 | 2026-06-28 | 初始发布 |
+## 📄 许可 (License)
+
+本项目遵循 **MIT License** 开源协议。您可以在遵守许可证条款的前提下，免费使用、修改和分发本项目的代码。详情请查阅仓库根目录下的 `LICENSE` 文件。
+
+---
+
+**Enjoy the game! 祝您拼出 2048！🎉**
