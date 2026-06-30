@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🏃 跑步计数</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        /* ===== 容器 ===== */
+        .app-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* ===== 摄像头视频 ===== */
+        #cameraVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            background: #1a1a2e;
+        }
+        /* 视频加载占位 */
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .video-placeholder .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+        .video-placeholder .text {
+            opacity: 0.6;
+            letter-spacing: 2px;
+        }
+
+        /* ===== 遮罩层 ===== */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 44px 24px 36px 24px;
+            pointer-events: none;
+        }
+        .overlay>* {
+            pointer-events: auto;
+        }
+
+        /* ===== 顶部信息栏 ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-top: 4px;
+        }
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 6px 16px 6px 14px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .app-title .emoji {
+            font-size: 1.2rem;
+        }
+        .app-title .label {
+            font-weight: 500;
+        }
+
+        .status-badge {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .status-dot.paused {
+            background: #fbbf24;
+        }
+        .status-dot.stopped {
+            background: #f87171;
+        }
+
+        /* ===== 计时器 ===== */
+        .timer-display {
+            text-align: center;
+            margin-top: 2px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: 4px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* ===== 中央步数 ===== */
+        .step-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            margin: -20px 0;
+        }
+        .step-number {
+            font-size: 8rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 4px 40px rgba(0, 0, 0, 0.7), 0 0 80px rgba(255, 107, 53, 0.15);
+            transition: transform 0.1s ease-out;
+            font-variant-numeric: tabular-nums;
+        }
+        .step-number.pop {
+            animation: pop 0.15s ease-out;
+        }
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+            }
+            40% {
+                transform: scale(1.12);
+                color: #ff8a5c;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .step-label {
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ===== 底部信息 ===== */
+        .bottom-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .info-item {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 10px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            min-width: 80px;
+            text-align: center;
+            flex: 1;
+        }
+        .info-item .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+        .info-item .value .unit {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.4);
+            margin-left: 2px;
+        }
+        .info-item .label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 2px;
+        }
+        .info-item.accent .value {
+            color: #ff8a5c;
+        }
+
+        /* ===== 控制按钮 ===== */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            flex: 1;
+            max-width: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 52px;
+        }
+        .btn:active {
+            transform: scale(0.94);
+        }
+        .btn-primary {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            color: #fff;
+            box-shadow: 0 4px 24px rgba(255, 107, 53, 0.3);
+        }
+        .btn-primary:active {
+            background: #e55a2a;
+            box-shadow: 0 2px 12px rgba(255, 107, 53, 0.2);
+        }
+        .btn-primary.active {
+            background: #fbbf24;
+            border-color: #fbbf24;
+            box-shadow: 0 4px 24px rgba(251, 191, 36, 0.3);
+        }
+        .btn-primary.active:active {
+            background: #e5a820;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .btn-secondary:active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+        .btn-danger:active {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.3;
+            transform: none !important;
+            cursor: not-allowed;
+        }
+        .btn .icon {
+            font-size: 1.1rem;
+        }
+
+        /* ===== 权限提示/错误 ===== */
+        .permission-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            gap: 16px;
+            transition: opacity 0.5s ease;
+        }
+        .permission-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .permission-overlay .big-icon {
+            font-size: 4.5rem;
+            margin-bottom: 6px;
+        }
+        .permission-overlay h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .permission-overlay p {
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 320px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .permission-overlay .btn {
+            max-width: 220px;
+            margin-top: 8px;
+            padding: 14px 40px;
+            font-size: 1rem;
+        }
+        .permission-overlay .error-detail {
+            color: #f87171;
+            font-size: 0.85rem;
+            max-width: 300px;
+            word-break: break-word;
+        }
+        .permission-overlay .hint {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 480px) {
+            .step-number {
+                font-size: 5.5rem;
+            }
+            .overlay {
+                padding: 32px 16px 24px 16px;
+            }
+            .app-title {
+                font-size: 0.85rem;
+                padding: 4px 12px 4px 10px;
+            }
+            .app-title .emoji {
+                font-size: 1rem;
+            }
+            .status-badge {
+                font-size: 0.6rem;
+                padding: 4px 10px;
+            }
+            .timer-display {
+                font-size: 0.8rem;
+                padding: 3px 12px;
+            }
+            .info-item {
+                padding: 6px 12px;
+            }
+            .info-item .value {
+                font-size: 1.1rem;
+            }
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+                min-height: 44px;
+                max-width: 100px;
+            }
+            .step-label {
+                font-size: 0.8rem;
+                letter-spacing: 2px;
+            }
+            .permission-overlay .big-icon {
+                font-size: 3.5rem;
+            }
+            .permission-overlay h2 {
+                font-size: 1.2rem;
+            }
+            .permission-overlay p {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .step-number {
+                font-size: 4rem;
+            }
+            .bottom-info {
+                gap: 6px;
+            }
+            .info-item {
+                padding: 4px 8px;
+                min-width: 60px;
+            }
+            .info-item .value {
+                font-size: 0.9rem;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+                min-height: 38px;
+                max-width: 80px;
+            }
+        }
+
+        @media (min-height: 800px) {
+            .step-number {
+                font-size: 10rem;
+            }
+        }
+
+        /* ===== 安全区域适配 ===== */
+        @supports (padding: max(0px)) {
+            .overlay {
+                padding-left: max(24px, env(safe-area-inset-left));
+                padding-right: max(24px, env(safe-area-inset-right));
+                padding-top: max(44px, env(safe-area-inset-top));
+                padding-bottom: max(36px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* ===== 加载动画 ===== */
+        .spinner {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #ff6b35;
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 平滑过渡 ===== */
+        .fade-transition {
+            transition: opacity 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="app">
+
+        <!-- ===== 摄像头视频 ===== -->
+        <video id="cameraVideo" autoplay playsinline muted></video>
+
+        <!-- ===== 视频加载占位 ===== -->
+        <div class="video-placeholder" id="videoPlaceholder">
+            <div class="icon">📷</div>
+            <div class="text">等待摄像头...</div>
+            <div style="margin-top:16px;"><span class="spinner"></span></div>
+        </div>
+
+        <!-- ===== 叠加层 ===== -->
+        <div class="overlay" id="overlay">
+
+            <!-- 顶部 -->
+            <div class="top-bar">
+                <div class="app-title">
+                    <span class="emoji">🏃</span>
+                    <span class="label">跑步计数</span>
+                </div>
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot stopped" id="statusDot"></span>
+                    <span id="statusText">未开始</span>
+                </div>
+            </div>
+
+            <!-- 计时器 -->
+            <div style="display:flex; justify-content:center;">
+                <div class="timer-display" id="timerDisplay">00:00</div>
+            </div>
+
+            <!-- 步数 -->
+            <div class="step-display">
+                <div class="step-number" id="stepNumber">0</div>
+                <div class="step-label">步 数</div>
+            </div>
+
+            <!-- 底部 -->
+            <div class="bottom-info">
+                <div class="info-item">
+                    <div class="value" id="cadenceValue">0 <span class="unit">spm</span></div>
+                    <div class="label">步频</div>
+                </div>
+                <div class="info-item accent">
+                    <div class="value" id="durationValue">0 <span class="unit">s</span></div>
+                    <div class="label">时长</div>
+                </div>
+                <div class="info-item">
+                    <div class="value" id="caloriesValue">0 <span class="unit">kcal</span></div>
+                    <div class="label">估算卡路里</div>
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button class="btn btn-secondary" id="resetBtn" disabled>
+                    <span class="icon">⟳</span> 重置
+                </button>
+                <button class="btn btn-primary" id="startBtn">
+                    <span class="icon">▶</span> 开始
+                </button>
+                <button class="btn btn-secondary" id="pauseBtn" disabled>
+                    <span class="icon">⏸</span> 暂停
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 权限/错误遮罩 ===== -->
+        <div class="permission-overlay" id="permissionOverlay">
+            <div class="big-icon" id="permIcon">📱</div>
+            <h2 id="permTitle">需要权限</h2>
+            <p id="permDesc">请允许使用摄像头和运动传感器来记录您的跑步数据。</p>
+            <button class="btn btn-primary" id="permBtn">授权并开始</button>
+            <div class="error-detail" id="permError" style="display:none;"></div>
+            <div class="hint" id="permHint">在 iOS 上，运动权限需在「设置 → Safari」中开启</div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  🏃 跑步计数 App - 核心逻辑
+        // ================================================================
+
+        (function() {
+            'use strict';
+
+            // ---------- DOM 引用 ----------
+            const video = document.getElementById('cameraVideo');
+            const placeholder = document.getElementById('videoPlaceholder');
+            const stepNumberEl = document.getElementById('stepNumber');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const cadenceValue = document.getElementById('cadenceValue');
+            const durationValue = document.getElementById('durationValue');
+            const caloriesValue = document.getElementById('caloriesValue');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            const permOverlay = document.getElementById('permissionOverlay');
+            const permIcon = document.getElementById('permIcon');
+            const permTitle = document.getElementById('permTitle');
+            const permDesc = document.getElementById('permDesc');
+            const permError = document.getElementById('permError');
+            const permHint = document.getElementById('permHint');
+            const permBtn = document.getElementById('permBtn');
+
+            // ---------- 状态 ----------
+            const State = {
+                IDLE: 'idle', // 未开始
+                RUNNING: 'running', // 运行中
+                PAUSED: 'paused', // 已暂停
+            };
+
+            let state = State.IDLE;
+            let stepCount = 0;
+            let elapsedSeconds = 0;
+            let cadence = 0; // 步/分钟
+            let calories = 0;
+
+            // 计时相关
+            let timerInterval = null;
+            let startTime = null;
+            let pausedTime = 0; // 暂停时累计已流逝时间 (ms)
+
+            // 步数检测相关
+            let lastStepTime = 0;
+            let stepCooldown = 200; // ms
+            let accelThreshold = 14.0;
+            let alpha = 0.25; // 低通滤波系数
+            let filteredMagnitude = 9.8;
+            let lastMagnitude = 9.8;
+            let isRising = false;
+            let peakValue = 0;
+            let stepBuffer = []; // 用于计算步频
+            let stepBufferMax = 20; // 保留最近20步的时间戳
+
+            // 传感器数据
+            let hasAccel = false;
+            let accelData = { x: 0, y: 0, z: 0 };
+
+            // 摄像头
+            let cameraReady = false;
+
+            // 动画帧
+            let animFrameId = null;
+
+            // 卡路里系数 (粗略: 每步 0.05 kcal, 基于 70kg 体重慢跑)
+            const CAL_PER_STEP = 0.05;
+
+            // ---------- 权限与初始化 ----------
+            async function initApp() {
+                try {
+                    // 1. 请求摄像头
+                    await initCamera();
+                    // 2. 请求运动传感器
+                    await initMotion();
+                    // 3. 隐藏权限遮罩
+                    permOverlay.classList.add('hidden');
+                    // 4. 更新UI
+                    updateUI();
+                    // 5. 开始动画循环
+                    startAnimationLoop();
+                } catch (err) {
+                    console.error('初始化失败:', err);
+                    showPermissionError(err.message || '初始化失败，请检查权限设置');
+                }
+            }
+
+            // ---------- 摄像头 ----------
+            async function initCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'user',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                        },
+                        audio: false,
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    cameraReady = true;
+                    placeholder.style.opacity = '0';
+                    // 占位隐藏
+                    setTimeout(() => {
+                        placeholder.style.display = 'none';
+                    }, 500);
+                } catch (err) {
+                    console.warn('摄像头获取失败:', err);
+                    // 非致命错误，继续运行
+                    placeholder.innerHTML = `
+                        <div class="icon">🚫</div>
+                        <div class="text">摄像头不可用</div>
+                        <div style="font-size:0.75rem;color:#666;margin-top:8px;">${err.message || ''}</div>
+                    `;
+                    // 仍然继续，步数功能不受影响
+                }
+            }
+
+            // ---------- 运动传感器 ----------
+            function initMotion() {
+                return new Promise((resolve, reject) => {
+                    if (!window.DeviceMotionEvent) {
+                        reject(new Error('设备不支持运动传感器'));
+                        return;
+                    }
+
+                    // 对于 iOS 13+，需要请求权限
+                    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                        DeviceMotionEvent.requestPermission()
+                            .then((permissionState) => {
+                                if (permissionState === 'granted') {
+                                    window.addEventListener('devicemotion', handleMotion, true);
+                                    hasAccel = true;
+                                    resolve();
+                                } else {
+                                    reject(new Error('运动传感器权限被拒绝'));
+                                }
+                            })
+                            .catch((err) => {
+                                reject(new Error('运动传感器权限请求失败: ' + err.message));
+                            });
+                    } else {
+                        // 非 iOS 或旧版本
+                        window.addEventListener('devicemotion', handleMotion, true);
+                        // 检查是否真的有数据
+                        setTimeout(() => {
+                            if (hasAccel) {
+                                resolve();
+                            } else {
+                                // 可能没有权限或没有传感器
+                                reject(new Error('无法获取运动数据，请检查权限'));
+                            }
+                        }, 500);
+                    }
+                });
+            }
+
+            // ---------- 运动数据处理 ----------
+            function handleMotion(event) {
+                const accel = event.accelerationIncludingGravity;
+                if (!accel) return;
+
+                const x = accel.x || 0;
+                const y = accel.y || 0;
+                const z = accel.z || 0;
+
+                // 如果数据全为0，可能是权限问题
+                if (x === 0 && y === 0 && z === 0) {
+                    return;
+                }
+
+                hasAccel = true;
+                accelData = { x, y, z };
+
+                // 计算 magnitude
+                const mag = Math.sqrt(x * x + y * y + z * z);
+
+                // 低通滤波
+                filteredMagnitude = alpha * mag + (1 - alpha) * filteredMagnitude;
+
+                // 步数检测 (仅在 RUNNING 状态)
+                if (state === State.RUNNING) {
+                    detectStep(filteredMagnitude);
+                }
+
+                lastMagnitude = filteredMagnitude;
+            }
+
+            // ---------- 步数检测算法 ----------
+            function detectStep(mag) {
+                const now = performance.now();
+
+                // 冷却期检查
+                if (now - lastStepTime < stepCooldown) {
+                    return;
+                }
+
+                // 判断波峰: 当前值小于上一个值，且上一个值是峰值
+                // 使用简单峰值检测：当 mag 从上升转为下降时，且峰值超过阈值
+                const currentIsRising = mag > filteredMagnitude;
+
+                if (isRising && !currentIsRising) {
+                    // 从上升转为下降，检查峰值
+                    if (peakValue > accelThreshold) {
+                        // 计一步
+                        recordStep(now);
+                    }
+                    peakValue = 0;
+                }
+
+                // 更新上升状态
+                isRising = currentIsRising;
+
+                // 记录峰值
+                if (mag > peakValue) {
+                    peakValue = mag;
+                }
+            }
+
+            function recordStep(timestamp) {
+                stepCount++;
+                lastStepTime = timestamp;
+
+                // 添加到步频缓冲区
+                stepBuffer.push(timestamp);
+                if (stepBuffer.length > stepBufferMax) {
+                    stepBuffer.shift();
+                }
+
+                // 更新步频
+                updateCadence();
+
+                // 更新卡路里
+                calories += CAL_PER_STEP;
+
+                // UI 动画
+                stepNumberEl.classList.remove('pop');
+                // 强制 reflow
+                void stepNumberEl.offsetWidth;
+                stepNumberEl.classList.add('pop');
+
+                // 更新显示
+                stepNumberEl.textContent = stepCount.toLocaleString();
+                caloriesValue.textContent = Math.round(calories) + ' kcal';
+            }
+
+            function updateCadence() {
+                const len = stepBuffer.length;
+                if (len < 2) {
+                    cadence = 0;
+                    cadenceValue.innerHTML = '0 <span class="unit">spm</span>';
+                    return;
+                }
+                // 计算最近几步的平均间隔
+                const first = stepBuffer[0];
+                const last = stepBuffer[len - 1];
+                const duration = (last - first) / 1000; // 秒
+                if (duration > 0.5) {
+                    cadence = Math.round((len - 1) / duration * 60);
+                    cadenceValue.innerHTML = cadence + ' <span class="unit">spm</span>';
+                }
+            }
+
+            // ---------- 计时器 ----------
+            function startTimer() {
+                if (timerInterval) return;
+                startTime = performance.now() - pausedTime;
+                timerInterval = setInterval(() => {
+                    const now = performance.now();
+                    const elapsed = now - startTime;
+                    elapsedSeconds = Math.floor(elapsed / 1000);
+                    updateTimerDisplay(elapsedSeconds);
+                    durationValue.textContent = elapsedSeconds + ' s';
+                }, 200);
+            }
+
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                // 保存已流逝的时间
+                if (startTime) {
+                    pausedTime = performance.now() - startTime;
+                }
+            }
+
+            function resetTimer() {
+                stopTimer();
+                elapsedSeconds = 0;
+                pausedTime = 0;
+                startTime = null;
+                updateTimerDisplay(0);
+                durationValue.textContent = '0 s';
+            }
+
+            function updateTimerDisplay(seconds) {
+                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const s = String(seconds % 60).padStart(2, '0');
+                timerDisplay.textContent = m + ':' + s;
+            }
+
+            // ---------- 动画循环 ----------
+            function startAnimationLoop() {
+                function loop() {
+                    // 更新步频显示 (实时)
+                    if (state === State.RUNNING && stepBuffer.length > 1) {
+                        updateCadence();
+                    }
+                    animFrameId = requestAnimationFrame(loop);
+                }
+                loop();
+            }
+
+            // ---------- UI 更新 ----------
+            function updateUI() {
+                stepNumberEl.textContent = stepCount.toLocaleString();
+                updateTimerDisplay(elapsedSeconds);
+                durationValue.textContent = elapsedSeconds + ' s';
+                cadenceValue.innerHTML = cadence + ' <span class="unit">spm</span>';
+                caloriesValue.textContent = Math.round(calories) + ' kcal';
+
+                // 状态
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                dot.className = 'status-dot';
+                if (state === State.IDLE) {
+                    dot.classList.add('stopped');
+                    text.textContent = '未开始';
+                } else if (state === State.RUNNING) {
+                    dot.classList.add('running');
+                    text.textContent = '跑步中';
+                } else if (state === State.PAUSED) {
+                    dot.classList.add('paused');
+                    text.textContent = '已暂停';
+                }
+
+                // 按钮
+                startBtn.disabled = (state === State.RUNNING);
+                pauseBtn.disabled = (state === State.IDLE || state === State.PAUSED);
+                resetBtn.disabled = (state === State.IDLE || stepCount === 0);
+
+                // 开始按钮文字
+                if (state === State.IDLE) {
+                    startBtn.innerHTML = '<span class="icon">▶</span> 开始';
+                    startBtn.className = 'btn btn-primary';
+                } else if (state === State.PAUSED) {
+                    startBtn.innerHTML = '<span class="icon">▶</span> 继续';
+                    startBtn.className = 'btn btn-primary';
+                    startBtn.disabled = false;
+                } else {
+                    startBtn.innerHTML = '<span class="icon">▶</span> 开始';
+                    startBtn.className = 'btn btn-primary';
+                }
+
+                // 暂停按钮
+                if (state === State.RUNNING) {
+                    pauseBtn.innerHTML = '<span class="icon">⏸</span> 暂停';
+                    pauseBtn.className = 'btn btn-secondary';
+                    pauseBtn.disabled = false;
+                } else {
+                    pauseBtn.innerHTML = '<span class="icon">⏸</span> 暂停';
+                    pauseBtn.className = 'btn btn-secondary';
+                }
+            }
+
+            // ---------- 控制函数 ----------
+            function startRunning() {
+                if (state === State.RUNNING) return;
+                if (state === State.IDLE) {
+                    // 全新开始
+                    stepCount = 0;
+                    calories = 0;
+                    stepBuffer = [];
+                    cadence = 0;
+                    pausedTime = 0;
+                    elapsedSeconds = 0;
+                    stepNumberEl.textContent = '0';
+                    caloriesValue.textContent = '0 kcal';
+                    cadenceValue.innerHTML = '0 <span class="unit">spm</span>';
+                    durationValue.textContent = '0 s';
+                    updateTimerDisplay(0);
+                }
+                state = State.RUNNING;
+                startTimer();
+                updateUI();
+            }
+
+            function pauseRunning() {
+                if (state !== State.RUNNING) return;
+                state = State.PAUSED;
+                stopTimer();
+                updateUI();
+            }
+
+            function resetRunning() {
+                if (state === State.IDLE && stepCount === 0) return;
+                state = State.IDLE;
+                stopTimer();
+                resetTimer();
+                stepCount = 0;
+                calories = 0;
+                stepBuffer = [];
+                cadence = 0;
+                pausedTime = 0;
+                elapsedSeconds = 0;
+                stepNumberEl.textContent = '0';
+                caloriesValue.textContent = '0 kcal';
+                cadenceValue.innerHTML = '0 <span class="unit">spm</span>';
+                durationValue.textContent = '0 s';
+                updateTimerDisplay(0);
+                updateUI();
+            }
+
+            // ---------- 权限错误处理 ----------
+            function showPermissionError(msg) {
+                permOverlay.classList.remove('hidden');
+                permIcon.textContent = '⚠️';
+                permTitle.textContent = '权限不足';
+                permDesc.textContent = '无法启动跑步计数，请检查以下权限：';
+                permError.style.display = 'block';
+                permError.textContent = msg;
+                permBtn.textContent = '重试';
+                permHint.textContent = '提示：在 iOS 上，需在「设置 → Safari → 运动与健身」中开启';
+                permBtn.onclick = () => {
+                    location.reload();
+                };
+            }
+
+            // ---------- 事件绑定 ----------
+            startBtn.addEventListener('click', startRunning);
+            pauseBtn.addEventListener('click', pauseRunning);
+            resetBtn.addEventListener('click', resetRunning);
+
+            // 键盘快捷键 (方便测试)
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    if (state === State.RUNNING) {
+                        pauseRunning();
+                    } else {
+                        startRunning();
+                    }
+                }
+                if (e.key === 'r' || e.key === 'R') {
+                    resetRunning();
+                }
+            });
+
+            // ---------- 启动 ----------
+            // 显示权限遮罩，等待用户点击
+            permBtn.addEventListener('click', () => {
+                permBtn.disabled = true;
+                permBtn.textContent = '启动中...';
+                initApp().catch((err) => {
+                    permBtn.disabled = false;
+                    permBtn.textContent = '重试';
+                    showPermissionError(err.message);
+                });
+            });
+
+            // 如果浏览器支持，自动尝试
+            // 但为了更好的用户体验，让用户点击按钮触发
+
+            // 对于不支持 DeviceMotion 的设备，给出提示
+            if (!window.DeviceMotionEvent) {
+                permIcon.textContent = '📱';
+                permTitle.textContent = '设备不支持';
+                permDesc.textContent = '您的设备不支持运动传感器，无法进行步数计数。';
+                permBtn.textContent = '了解详情';
+                permBtn.onclick = () => {
+                    alert('跑步计数需要使用加速度计传感器。请使用支持的运动设备。');
+                };
+                permHint.textContent = '建议使用智能手机或平板电脑';
+            }
+
+            console.log('🏃 跑步计数 App 已加载，点击"授权并开始"启动');
+        })();
+    </script>
+
+</body>
+</html>
