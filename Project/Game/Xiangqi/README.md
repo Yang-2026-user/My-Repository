@@ -71,8 +71,10 @@ cd My-Repository/Project/Game/Xiangqi
 
 ## 📄 许可证 (License)
 
-本项目仅供学习交流使用，未指定开源许可证。  
-This project is for educational purposes only, under no specific open-source license.
+MIT License © 2026 Yang-2026-user
+
+详见仓库根目录的 LICENSE 文件。
+See the LICENSE file in the repository root for details.
 
 ---
 
