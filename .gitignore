@@ -20,3 +20,10 @@ desktop.ini
 # 项目特定（如有本地测试生成的临时文件）
 *.fen
 *.bak
+
+#
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
